@@ -15,10 +15,12 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem } from "../ui/carousel";
-import { AppWindowMac, Plus, PlusCircle, Upload } from "lucide-react";
+import { AppWindowMac, Plus, Upload, Megaphone } from "lucide-react";
 import { Textarea } from "../ui/textarea";
 import { Input } from "../ui/input";
 import { CustomNode } from "../../types/FlowTypes";
+import { Select } from "@/components/ui/select";
+import { SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 
 /**
  * CarouselCard is a React functional component that represents a carousel of cards.
@@ -74,6 +76,7 @@ const CarouselCard: React.FC<NodeProps> = ({ data, id, isConnectable }) => {
         description: "Add description here...",
         imageUrl: "",
         buttons: [],
+        speaker: 'bot',
       };
 
       // Update the cardData.cards array
@@ -218,7 +221,7 @@ const CarouselCard: React.FC<NodeProps> = ({ data, id, isConnectable }) => {
   const addAction = (card: RichCardData) => {
     const newAction: ButtonData = {
       id: `action-${Date.now()}`,
-      label: `Action label `,
+      label: `Choose a type of CTA.... `,
       action: "DEFAULT_ACTION",
       type: "action",
       title: "Action Title",
@@ -255,7 +258,7 @@ const CarouselCard: React.FC<NodeProps> = ({ data, id, isConnectable }) => {
           {cards.length > 0 &&
             cards.map((card, index) => (
               <CarouselItem key={card.id} className="!w-full">
-                <Card className="border rounded-lg shadow-sm relative !w-full">
+                <Card className="border rounded-lg shadow-sm relative !w-full p-0">
                   {/* Target handle for each card */}
                   <Handle
                     id={`card-${card.id}-target`}
@@ -311,7 +314,7 @@ const CarouselCard: React.FC<NodeProps> = ({ data, id, isConnectable }) => {
                           <span className="text-sm text-gray-500">
                             Click to upload image
                           </span>
-                          <input
+                          <Input
                             type="file"
                             accept="image/*"
                             className="hidden"
@@ -339,7 +342,7 @@ const CarouselCard: React.FC<NodeProps> = ({ data, id, isConnectable }) => {
                       <p className="text-sm font-medium mb-1">Description</p>
                       <Textarea
                         placeholder="Describe your card here..."
-                        className="w-full min-h-24"
+                        className="w-full min-h-24 flex-1 px-2 py-1 text-xs border border-gray-300 rounded-md focus:border-gray-400"
                         value={card.description}
                         onChange={(e) =>
                           onchangeContent(e, card, "description")
@@ -347,34 +350,55 @@ const CarouselCard: React.FC<NodeProps> = ({ data, id, isConnectable }) => {
                       />
                     </div>
                   </CardContent>
-
-                  <CardFooter className="flex flex-col border-t">
+                  <hr/>
+                  <CardFooter className="flex flex-col bg-transparent">
                     {card.buttons && card.buttons.length > 0 && (
-                      <div className="mt-4 w-full">
+                      <div className="w-full px-0">
                         {card.buttons.map((action) => (
-                          <div
-                            key={action.id}
-                            className="relative border border-gray-300 p-3 bg-white"
-                          >
-                            <div className="flex items-center space-x-2 mb-2">
-                              <span className="w-5 h-5 flex items-center justify-center bg-gray-100 rounded-md">
-                                <span>🔘</span>
-                              </span>
-                              <span className="text-sm font-medium">
-                                Action
-                              </span>
-                            </div>
-
-                            <div className="w-full">
-                              {/* Action label */}
-                              <div className="px-2 py-1 text-xs border border-gray-300 rounded-md mb-2">
-                                {action.label}
+                          <div key={action.id} className="relative p-4 border-b">
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-center gap-2">
+                                <Megaphone className="w-5 h-5 text-muted-foreground" />
+                                <span className="font-medium text-sm">Action</span>
                               </div>
+                              <Button variant="ghost" size="icon" className="h-6 w-6 p-0 text-muted-foreground">
+                                <span className="text-lg">⋯</span>
+                              </Button>
+                            </div>
+                            <div>
+                              {/* Action label */}
+                              <Select
+                                value={action.label}
+                                onValueChange={(value: string) => {
+                                  const updatedCards = cards.map((c) =>
+                                    c.id === card.id
+                                      ? {
+                                          ...c,
+                                          buttons: c.buttons.map((b) =>
+                                            b.id === action.id ? { ...b, label: value } : b
+                                          ),
+                                        }
+                                      : c
+                                  );
+                                  setCards(updatedCards);
+                                  cardData.cards = updatedCards;
+                                  autoSave(updatedCards);
+                                }}
+                              >
+                                <SelectTrigger className="w-full px-2 py-1 border !border-gray-300 rounded-md mb-2 flex justify-between items-center">
+                                  <span className="text-sm font-normal">{action.label || "Select action"}</span>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Chip" className="text-xs py-2">Chip</SelectItem>
+                                  <SelectItem value="Browse" className="text-xs py-2">Browse</SelectItem>
+                                  <SelectItem value="Chip2" className="text-xs py-2">Chip2</SelectItem>
+                                </SelectContent>
+                              </Select>
 
                               {/* Editable title */}
-                              <p className="text-sm font-medium">Title</p>
+                              <p className="text-sm font-medium mb-1">Title</p>
                               <div className="flex w-full mb-2">
-                                <input
+                                <Input
                                   type="text"
                                   value={action.title || ""}
                                   onChange={(e) =>
@@ -385,7 +409,6 @@ const CarouselCard: React.FC<NodeProps> = ({ data, id, isConnectable }) => {
                                       action.id
                                     )
                                   }
-                                  className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded-md"
                                 />
                               </div>
                             </div>
@@ -409,8 +432,13 @@ const CarouselCard: React.FC<NodeProps> = ({ data, id, isConnectable }) => {
                         ))}
                       </div>
                     )}
-                    <Button size="sm" onClick={() => addAction(card)}>
-                      <PlusCircle className="h-4 w-4 mr-2" /> Add action
+                    <Button
+                      variant="ghost"
+                      onClick={() => addAction(card)}
+                      className="w-full justify-center rounded-b-lg border-t bg-muted text-muted-foreground text-sm font-normal gap-2 h-12"
+                    >
+                      <Plus className="h-5 w-5" />
+                      Add action
                     </Button>
                   </CardFooter>
                 </Card>
